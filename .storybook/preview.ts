@@ -4,6 +4,7 @@ import '../src/styles/globals.css';
 
 const preview: Preview = {
   parameters: {},
+  tags: ['autodocs'],
 };
 
 export default preview;
