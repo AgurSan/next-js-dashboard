@@ -3,6 +3,8 @@
   "author": "Clément Sananikone",
   "version": "0.1.0",
   "private": true,
+  "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS='--inspect' next dev",
     "build": "next build",

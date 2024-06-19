@@ -15,7 +15,7 @@ const DashboardLayout: React.FC<IDashboardLayout> = ({ children }) => {
       </Head>
       <div className="flex flex-col min-h-screen items-center">
         <Header />
-        <main>{children}</main>
+        <main className="">{children}</main>
         <div className="m-auto"></div>
         <Footer />
       </div>
