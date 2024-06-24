@@ -1,4 +1,4 @@
-import { Db, MongoClient } from 'mongodb';
+import mongoose, { Connection } from 'mongoose';
 
 if (!process.env.MONGODB_URI) {
   throw new Error(
@@ -7,29 +7,55 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI;
-const options = {};
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-
-if (process.env.NODE_ENV === 'development') {
-  let globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
+declare global {
+  var mongoose: {
+    conn: Connection | null;
+    promise: Promise<Connection> | null;
   };
+}
 
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri!, options);
-    globalWithMongo._mongoClientPromise = client.connect();
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDb(): Promise<Connection> {
+  if (cached.conn) {
+    return cached.conn;
   }
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  client = new MongoClient(uri!, options);
-  clientPromise = client.connect();
+
+  if (!cached.promise) {
+    const opts = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      bufferCommands: false,
+    };
+
+    cached.promise = new Promise<Connection>((resolve, reject) => {
+      mongoose
+        .connect(uri!, opts)
+        .then(() => {
+          cached.conn = mongoose.connection;
+          resolve(cached.conn);
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
+  }
+
+  try {
+    await cached.promise;
+    return cached.conn!;
+  } catch (e) {
+    cached.promise = null;
+    throw new Error(
+      'MongoDB connection error: ' +
+        (e instanceof Error ? e.message : 'Unknown error occurred')
+    );
+  }
 }
 
-export default clientPromise;
-
-export async function getDatabase(): Promise<Db> {
-  const client = await clientPromise;
-  return client.db();
-}
+export default connectDb;
