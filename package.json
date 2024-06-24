@@ -16,6 +16,10 @@
   },
   "dependencies": {
     "@storybook/addon-styling-webpack": "^1.0.0",
+    "@types/mongoose": "^5.11.97",
+    "dotenv": "^16.4.5",
+    "mongodb": "^6.7.0",
+    "mongoose": "^8.4.3",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18"
@@ -34,7 +38,7 @@
     "@storybook/nextjs": "^8.1.9",
     "@storybook/react": "^8.1.9",
     "@storybook/test": "^8.1.9",
-    "@types/node": "^20",
+    "@types/node": "^20.14.8",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "cross-env": "^7.0.3",
