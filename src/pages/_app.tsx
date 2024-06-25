@@ -1,7 +1,7 @@
 // pages/_app.tsx
 import { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
-import DashboardLayout from '../components/layout/dashboard/DashboardLayout';
+import DashboardLayout from '../components/layout/primary/Primary';
 import '../styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });

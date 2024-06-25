@@ -26,7 +26,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/types/global.d.ts"
+    "src/types/global.d.ts",
+    "script/createMongoDB.js"
   ],
   "exclude": ["node_modules"]
 }

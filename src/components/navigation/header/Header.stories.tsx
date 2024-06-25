@@ -3,7 +3,7 @@ import Header, { IHeader } from './Header';
 import { mockHeaderProps } from './Header.mocks';
 
 export default {
-  title: 'ui/Header',
+  title: 'navigation/Header',
   component: Header,
   argTypes: {},
 } as Meta;

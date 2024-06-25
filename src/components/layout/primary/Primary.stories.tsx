@@ -1,5 +1,5 @@
 import { Meta, StoryFn } from '@storybook/react';
-import DashboardLayout, { IDashboardLayout } from './DashboardLayout';
+import DashboardLayout, { IDashboardLayout } from './Primary';
 
 export default {
   title: 'layout/DashboardLayout',

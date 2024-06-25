@@ -1,37 +1,53 @@
 import csv from 'csv-parser';
 import { Readable } from 'stream';
-import type { Product } from '../types/Product';
+import type { IProduct } from '../types';
 
-export async function parseCsv(csvString: string): Promise<Product[]> {
-  return new Promise<Product[]>((resolve, reject) => {
-    const datas: Product[] = [];
+export async function parseCsv(csvString: string): Promise<IProduct[]> {
+  return new Promise((resolve, reject) => {
+    const products: IProduct[] = [];
     const stream = Readable.from(csvString);
 
     stream
-      .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
-      .on('data', (data: Record<string, string>) => {
-        const rowData: Product = {
-          'Row ID': parseInt(data['Row ID']),
-          'Order ID': data['Order ID'],
-          'Order Date': new Date(Date.parse(data['Order Date'])),
-          'Customer ID': data['Customer ID'],
-          // prettier-ignore
-          'State': data['State'],
-          // prettier-ignore
-          'Region': data['Region'],
-          'Product ID': data['Product ID'],
-          // prettier-ignore
-          'Sales': Number(data['Sales']),
-          // prettier-ignore
-          'Quantity': Number(data['Quantity']),
-        };
-        datas.push(rowData);
+      .pipe(csv())
+      .on('data', (data: any) => {
+        try {
+          // Trouver la clé qui commence par "------WebKitFormBoundary"
+          const boundaryKey = Object.keys(data).find((key) =>
+            key.startsWith('------WebKitFormBoundary')
+          );
+
+          const product: IProduct = {
+            rowId: boundaryKey ? Number(data[boundaryKey]) : undefined,
+            orderId: String(data._1),
+            orderDate: new Date(data._2),
+            customerId: String(data._3),
+            state: String(data._4),
+            region: String(data._5),
+            productId: String(data._6),
+            sales: Number(data._7),
+            quantity: Number(data._8),
+          };
+
+          // Vérification de la validité des données
+          if (
+            !product.orderId ||
+            isNaN(product.orderDate.getTime()) ||
+            !product.customerId ||
+            !product.state ||
+            !product.region ||
+            !product.productId ||
+            isNaN(product.sales) ||
+            isNaN(product.quantity)
+          ) {
+            throw new Error('Invalid data in row');
+          }
+
+          products.push(product);
+        } catch (error: any) {
+          console.error(`Error processing row: ${error.message}`, data);
+        }
       })
-      .on('end', () => {
-        resolve(datas);
-      })
-      .on('error', (error) => {
-        reject(error);
-      });
+      .on('end', () => resolve(products))
+      .on('error', (error) => reject(error));
   });
 }

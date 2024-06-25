@@ -13,9 +13,11 @@ const DashboardLayout: React.FC<IDashboardLayout> = ({ children }) => {
       <Head>
         <title>NextJs Fullstack Dashboard App</title>
       </Head>
-      <div className="flex flex-col min-h-screen items-center">
+      <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="">{children}</main>
+        <main className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+          {children}
+        </main>
         <div className="m-auto"></div>
         <Footer />
       </div>
