@@ -1,39 +1,42 @@
 import Chart from 'chart.js/auto';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { formatCurrency } from '../../lib/formatCurrency';
 import { IMetrics } from '../../types';
 
 export const MonthlyMetricsChart = ({ metrics }: { metrics: IMetrics }) => {
   const canvasRef = useRef(null);
 
-  const monthlyData = Object.entries(metrics.monthlyMetrics).map(
-    ([month, data]) => ({
-      month: new Date(null, parseInt(month) - 1).toLocaleString('default', {
-        month: 'long',
-      }),
-      revenue: data.revenue,
-    })
-  );
-
-  const prepareChartData = () => {
-    const labels = monthlyData.map((item) => item.month);
-    const data = monthlyData.map((item) => item.revenue);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Revenue',
-          data,
-          backgroundColor: 'rgba(59, 130, 246, 0.5)',
-          borderColor: 'rgb(59, 130, 246)',
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
+  const monthlyData = useMemo(() => {
+    return Object.entries(metrics.monthlyMetrics)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({
+        month: new Date(month).toLocaleString('default', {
+          month: 'short',
+          year: 'numeric',
+        }),
+        revenue: data.revenue,
+      }));
+  }, [metrics]);
 
   useEffect(() => {
+    const prepareChartData = () => {
+      const labels = monthlyData.map((item) => item.month);
+      const data = monthlyData.map((item) => item.revenue);
+
+      return {
+        labels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data,
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgb(59, 130, 246)',
+            borderWidth: 1,
+          },
+        ],
+      };
+    };
+
     const chartData = prepareChartData();
     const chartInstance = new Chart(canvasRef.current, {
       type: 'bar',
@@ -53,7 +56,7 @@ export const MonthlyMetricsChart = ({ metrics }: { metrics: IMetrics }) => {
     return () => {
       chartInstance.destroy();
     };
-  }, [metrics]);
+  }, [monthlyData]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
