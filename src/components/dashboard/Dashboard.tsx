@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { IMetadata, IMetrics } from '../../types';
-import UploadCSV from '../upload/UploadCSV';
+import { MonthlyMetricsChart } from '../charts/MonthlyMetricsChart';
+import { MetricsTable } from '../metric/MetricTable';
 
 const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<IMetrics | null>(null);
   const [metadata, setMetadata] = useState<IMetadata | null>(null);
-  const [selectedYear, setSelectedYear] = useState<string>('All Years');
-  const [selectedState, setSelectedState] = useState<string>('All States');
+  const [year, setYear] = useState<string>('');
+  const [state, setState] = useState<string>('');
 
   useEffect(() => {
     fetchData();
@@ -27,73 +28,74 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      if (response.ok) {
-        fetchData(); // Refresh data after successful upload
-      } else {
-        console.error('Upload failed');
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    }
-  };
+  const filteredMetrics = useMemo(() => {
+    if (!metrics) return null;
+
+    if (!year) return metrics;
+
+    const filteredMonthlyMetrics = Object.fromEntries(
+      Object.entries(metrics.monthlyMetrics).filter(([month]) =>
+        month.startsWith(year)
+      )
+    );
+
+    const totalRevenue = Object.values(filteredMonthlyMetrics).reduce(
+      (sum, { revenue }) => sum + revenue,
+      0
+    );
+
+    const totalOrders = Object.values(filteredMonthlyMetrics).reduce(
+      (sum, { orders }) => sum + orders,
+      0
+    );
+
+    return {
+      ...metrics,
+      monthlyMetrics: filteredMonthlyMetrics,
+      totalRevenue,
+      avgRevenuePerOrder: totalRevenue / totalOrders,
+    };
+  }, [metrics, year]);
 
   if (!metrics || !metadata) return <div>Loading...</div>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <div className="mb-6">
-        <UploadCSV onUpload={handleUpload} />
-      </div>
-      <div className="flex justify-end space-x-4 mb-4">
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option>All Years</option>
-          {metadata.years.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedState}
-          onChange={(e) => setSelectedState(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option>All States</option>
-          {metadata.states.map((state) => (
-            <option key={state} value={state}>
-              {state}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-2">Total Revenue</h2>
-          <p className="text-2xl">${metrics.totalRevenue.toFixed(2)}</p>
+    <div className="min-h-screen bg-blue-50 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-blue-800">Dashboard</h1>
+          <div className="flex space-x-4">
+            <select
+              className="py-2 px-4 rounded-md bg-white text-blue-800 shadow-sm"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+            >
+              <option value="">All Years</option>
+              {metadata.years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <select
+              className="py-2 px-4 rounded-md bg-white text-blue-800 shadow-sm"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+            >
+              <option value="">All States</option>
+              {metadata.states.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-2">Avg. Revenue per Order</h2>
-          <p className="text-2xl">${metrics.avgRevenuePerOrder.toFixed(2)}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-2">Unique Customers</h2>
-          <p className="text-2xl">{metrics.uniqueCustomers}</p>
+        <div className="grid grid-cols-1 md:grid-rows-auto gap-8">
+          {metrics && <MetricsTable metrics={metrics} />}
+          {metrics && <MonthlyMetricsChart metrics={metrics} />}
         </div>
       </div>
-      {/* Add chart component here for monthly metrics */}
     </div>
   );
 };

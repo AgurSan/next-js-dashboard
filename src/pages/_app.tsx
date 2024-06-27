@@ -1,4 +1,3 @@
-// pages/_app.tsx
 import { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
 import DashboardLayout from '../components/layout/primary/Primary';
