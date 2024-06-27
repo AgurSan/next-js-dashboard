@@ -4,7 +4,7 @@ import { formatCurrency } from '../../lib/formatCurrency';
 import { IMetrics } from '../../types';
 
 export const MonthlyMetricsChart = ({ metrics }: { metrics: IMetrics }) => {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const monthlyData = useMemo(() => {
     return Object.entries(metrics.monthlyMetrics)
@@ -19,6 +19,8 @@ export const MonthlyMetricsChart = ({ metrics }: { metrics: IMetrics }) => {
   }, [metrics]);
 
   useEffect(() => {
+    if (!canvasRef.current) return;
+
     const prepareChartData = () => {
       const labels = monthlyData.map((item) => item.month);
       const data = monthlyData.map((item) => item.revenue);
@@ -46,7 +48,12 @@ export const MonthlyMetricsChart = ({ metrics }: { metrics: IMetrics }) => {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: (value: Number) => formatCurrency(value as number),
+              callback: function (value, index, ticks) {
+                if (typeof value === 'number') {
+                  return formatCurrency(value);
+                }
+                return value;
+              },
             },
           },
         },
